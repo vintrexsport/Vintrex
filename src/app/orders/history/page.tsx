@@ -29,7 +29,7 @@ export default async function OrderHistoryPage() {
             brand:brands(*)
         `)
         .eq('is_archived', true)
-        .order('shipped_at', { ascending: false })
+        .order('shipped_at', { ascending: false, nullsFirst: false })
 
     if (error) {
         console.error('Error fetching archived orders:', error)
@@ -44,6 +44,11 @@ export default async function OrderHistoryPage() {
 
     return (
         <DashboardLayout user={profile}>
+            {error && (
+                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    Gagal memuat riwayat order: {error.message}
+                </div>
+            )}
             <OrderHistoryClient orders={orders || []} brands={brands || []} />
         </DashboardLayout>
     )

@@ -560,7 +560,7 @@ export async function completeOrder(orderId: string): Promise<{ success: boolean
     try {
         const { data: order, error: orderError } = await supabase
             .from('orders')
-            .select('id, is_archived')
+            .select('id, is_archived, shipped_at')
             .eq('id', orderId)
             .single()
 
@@ -579,6 +579,8 @@ export async function completeOrder(orderId: string): Promise<{ success: boolean
                 pelunasan_verified: true,
                 pelunasan_verified_at: now,
                 is_archived: true,
+                // Pastikan tanggal kirim terisi agar order tampil di urutan teratas riwayat
+                shipped_at: order.shipped_at ?? now,
                 updated_at: now,
             })
             .eq('id', orderId)

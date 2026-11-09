@@ -87,6 +87,11 @@ export default function OrderHistoryClient({ orders, brands }: OrderHistoryClien
         [brands]
     )
 
+    // Tanggal acuan arsip: order bisa selesai tanpa no. resi sehingga shipped_at null.
+    // Pakai tanggal pelunasan / update terakhir sebagai fallback agar tidak tenggelam ke 1970.
+    const getArchiveDate = (order: ArchivedOrder) =>
+        order.shipped_at || order.pelunasan_verified_at || order.updated_at
+
     // Filter and sort orders
     const filteredOrders = useMemo(() => {
         const result = orders.filter(order => {
@@ -103,8 +108,8 @@ export default function OrderHistoryClient({ orders, brands }: OrderHistoryClien
             // Brand filter
             if (brandFilter && order.brand_id !== brandFilter) return false
 
-            // Date range filter (berdasarkan tanggal kirim)
-            if (!isDateInRange(order.shipped_at, dateRange)) return false
+            // Date range filter (berdasarkan tanggal kirim, fallback tanggal selesai)
+            if (!isDateInRange(getArchiveDate(order), dateRange)) return false
 
             return true
         })
@@ -113,9 +118,9 @@ export default function OrderHistoryClient({ orders, brands }: OrderHistoryClien
         result.sort((a, b) => {
             switch (sortBy) {
                 case 'date_desc':
-                    return new Date(b.shipped_at || 0).getTime() - new Date(a.shipped_at || 0).getTime()
+                    return new Date(getArchiveDate(b) || 0).getTime() - new Date(getArchiveDate(a) || 0).getTime()
                 case 'date_asc':
-                    return new Date(a.shipped_at || 0).getTime() - new Date(b.shipped_at || 0).getTime()
+                    return new Date(getArchiveDate(a) || 0).getTime() - new Date(getArchiveDate(b) || 0).getTime()
                 case 'customer_asc':
                     return (a.customer?.name || '').localeCompare(b.customer?.name || '')
                 case 'customer_desc':
